@@ -1,26 +1,27 @@
 #include "customer.h"
 
-static void _encqueue_fifo(cqueue** q, customer* c);
-static void _encqueue_sjf(cqueue** q,  customer* c);
+//The GOOD functions
+static void _encqueue_fifo(cqueue* q, customer* c);
+static void _encqueue_sjf(cqueue* q,  customer* c);
 
-customer* decqueue(cqueue** q) {
+customer* decqueue(cqueue* q) {
     customer * c = NULL;
-    if(*q == NULL)
+    if(q == NULL)
         return NULL;
-    if((*q)->head == NULL)
+    if(q->head == NULL)
         return NULL;
-    c = (*q)->head;
+    c = q->head;
 
-    (*q)->head = c->next;
+    q->head = c->next;
     //This will be true except when there is 1 node left
-    if((*q)->head != NULL)
-        ((customer*)(*q)->head)->prev = NULL;
-    (*q)->count--;
+    if(q->head != NULL)
+        q->head->prev = NULL;
+    q->count--;
 
     //List is now empty reset all
-    if((*q)->head == NULL) {
-        (*q)->tail  = NULL;
-        (*q)->count = 0;
+    if(q->head == NULL) {
+        q->tail  = NULL;
+        q->count = 0;
     }
 
     //Don't want any loose ends
@@ -29,12 +30,11 @@ customer* decqueue(cqueue** q) {
     return c;
 }
 
-void encqueue(cqueue** q, customer* c) {
-    //Initialize new queue
-    if(*q == NULL)
+void encqueue(cqueue* q, customer* c) {
+    if(q == NULL)
         return;
     //Enqueue based on what mode passed
-    switch((*q)->mode) {
+    switch(q->mode) {
         case FIFO: return _encqueue_fifo(q,c);
         case SJF : return _encqueue_sjf(q,c);
         default  : return _encqueue_fifo(q,c);
@@ -60,14 +60,13 @@ customer* new_customer(double j, timeval b, timeval d) {
     return c;
 }
 
-void destroy_cqueue(cqueue** q) {
+void destroy_cqueue(cqueue* q) {
     customer* i = decqueue(q);
     while(i != NULL) {
         destroy_customer(i);
         i = decqueue(q);
     }
-    free(*q);
-    q = NULL;
+    free(q);
     return;
 }
 
@@ -76,17 +75,14 @@ void destroy_customer(customer* c) {
     return;
 }
 
-void print_cqueue_trace(cqueue* q) {
-    customer* i = q->head;
-    if(q == NULL) {
-        printf("NULL Queue\n");
-        return;
-    } else if(q->head == NULL) {
+void print_cqueue_trace(cqueue q) {
+    customer* i = q.head;
+    if(q.head == NULL) {
         printf("Queue is empty\n");
         return;
     }
-    printf("Count : %d\n",q->count);
-    switch(q->mode) {
+    printf("Count : %d\n",q.count);
+    switch(q.mode) {
         case SJF  : printf("Mode  : SJF\n");  break;
         case FIFO : printf("Mode  : FIFO\n"); break;
     }
@@ -107,42 +103,42 @@ void print_cqueue_trace(cqueue* q) {
     return;
 }
 
-void _encqueue_fifo(cqueue** q, customer* c) {
-    if(*q == NULL || c == NULL)
+void _encqueue_fifo(cqueue* q, customer* c) {
+    if(q == NULL || c == NULL)
         return;
     //Queue is empty
-    if((*q)->head == NULL) {
-        (*q)->head =  c;
-        (*q)->tail =  c;
-        (*q)->count = 1;
+    if(q->head == NULL) {
+        q->head =  c;
+        q->tail =  c;
+        q->count = 1;
     } else {
-        ((customer*)(*q)->tail)->next = c;
-        c->prev = (customer*)((*q)->tail);
-        (*q)->tail = c;
-        (*q)->count++;
+        q->tail->next = c;
+        c->prev = (customer*)q->tail;
+        q->tail = c;
+        q->count++;
     }
     return;
 }
 
-void _encqueue_sjf(cqueue** q, customer* c) {
+void _encqueue_sjf(cqueue* q, customer* c) {
     if(q == NULL || c == NULL)
         return;
     //Queue is empty
-    if((*q)->head == NULL) {
+    if(q->head == NULL) {
         return _encqueue_fifo(q,c);
     //Node goes at head
-    } else if(c->job <= ((customer*)(*q)->head)->job) {
-        c->next = (*q)->head;
-        ((customer*)(*q)->head)->prev = c;
-        (*q)->head = c;
-        (*q)->count++;
+    } else if(c->job <= q->head->job) {
+        c->next = q->head;
+        q->head->prev = c;
+        q->head = c;
+        q->count++;
         return;
     //Node goes at the tail
-    } else if(c->job >= ((customer*)(*q)->tail)->job) {
+    } else if(c->job >= q->tail->job) {
         return _encqueue_fifo(q,c);
     //Node goes somewhere in between
     } else {
-        customer* i = (customer*)(*q)->head;
+        customer* i = q->head;
         while(i != NULL) {
             if(i->job >= c->job) {
                 //We add the new node after if jobs are equal
@@ -151,10 +147,10 @@ void _encqueue_sjf(cqueue** q, customer* c) {
                 if(i->job == c->job)
                     i = i->next;
                 c->next = i;
-                ((customer*)(i->prev))->next = c;
+                i->prev->next = c;
                 c->prev = i->prev;
                 i->prev = c;
-                (*q)->count++;
+                q->count++;
                 break;
             }
             i = i->next;
