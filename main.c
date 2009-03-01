@@ -1,36 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <math.h>
 #include "customer.h"
 
-extern customer* decqueue(cqueue* queue);
-extern void      encqueue(cqueue* queue, customer* customer);
-extern cqueue*   new_cqueue(mode);
-extern customer* new_customer(double job, timeval born, timeval died);
-extern void      destroy_cqueue(cqueue* queue);
-extern void      destroy_customer(customer* condemed);
-extern void      print_cqueue_trace(cqueue queue);
+//Simulation defaults
+double lambda = 3.0;   //Arrival time distribution parameter
+double mu     = 4.0;   //Service time distribution parameter
+int    cnum   = 1000;  //Number of customers for simulation
+int    snum   = 1;     //Number of servers for simulation
+double seed   = 0;     //Random number generator seed
+cqmode mode   = FIFO;  //Operational mode
+
+//Working functions
+inline double rexp(double l) {return -log(1.0-drand48())/l;}
+
 
 int main()
 {
-    timeval   t;
-    int       i = 0;
-    double    j = 0;
-    cqueue*   q = new_cqueue(SJF);
-    customer* c = NULL;
-    srand48((long)time(NULL));
 
-    printf("Starting...\n");
-    for(i = 0; i < 10; i++) {
-        j = drand48();
-        c = new_customer(j,t,t);
-        encqueue(&q,c);
-    }
-    print_cqueue_trace(*q);
-    destroy_cqueue(q);
-    print_cqueue_trace(*q);
-    printf("Done...\n");
-    q = NULL;
-    return 0;
 }
 

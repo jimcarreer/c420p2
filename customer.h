@@ -29,13 +29,12 @@ typedef struct _cqueue {
     enum   _cqmode     mode; //Insertion mode
 } cqueue;
 
-//These functions use malloc and free so they are
-//not thread safe with out the use of a mutex.
 customer* decqueue(cqueue* queue);
 void      encqueue(cqueue* queue, customer* customer);
-cqueue*   new_cqueue(mode);
+cqueue*   new_cqueue(cqmode mode);
 customer* new_customer(double job, timeval born, timeval died);
 void      destroy_cqueue(cqueue* queue);
 void      destroy_customer(customer* condemed);
 void      print_cqueue_trace(cqueue queue);
+
 #endif // CUSTOMER_H_INCLUDED
