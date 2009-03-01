@@ -50,11 +50,10 @@ cqueue* new_cqueue(cqmode m) {
     return q;
 }
 
-customer* new_customer(double j, timeval b, timeval d) {
+customer* new_customer(double j, timeval b) {
     customer* c = (customer*)malloc(sizeof(customer));
     c->job      = j;
     c->born     = b;
-    c->died     = d;
     c->next     = NULL;
     c->prev     = NULL;
     return c;

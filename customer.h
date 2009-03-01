@@ -32,7 +32,7 @@ typedef struct _cqueue {
 customer* decqueue(cqueue* queue);
 void      encqueue(cqueue* queue, customer* customer);
 cqueue*   new_cqueue(cqmode mode);
-customer* new_customer(double job, timeval born, timeval died);
+customer* new_customer(double job, timeval born);
 void      destroy_cqueue(cqueue* queue);
 void      destroy_customer(customer* condemed);
 void      print_cqueue_trace(cqueue queue);
