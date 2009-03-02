@@ -12,7 +12,7 @@
 #define DEFAULT_LAMBDA    3.0
 #define DEFAULT_MU        4.0
 #define DEFAULT_CUSTOMERS 1000
-#define DEFAULT_SERVERS   1
+#define DEFAULT_SERVERS   2
 #define DEFAULT_QMODE     FIFO
 #define DEFAULT_SEED      0
 
@@ -30,12 +30,13 @@ typedef struct _genisis_data {
     int    customers;
     double lambda;
     double mu;
+    double rseed;
 } genisis_data;
 
 //Prototypes and inline functions
 inline double rexp(double l) {return -log(1.0-drand48())/l;}
-void* genisis(void);
-void* service(void);
+void* genisis(void*);
+void* service(void*);
 void* output(void);
 void* watchman(void);
 void  psleep(double interval);
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
     genisis_data gdata;
     cqmode mode      = DEFAULT_QMODE;
     int    servers   = DEFAULT_SERVERS;
-    double rseed     = DEFAULT_SEED;
+    gdata.rseed      = DEFAULT_SEED;
     gdata.customers  = DEFAULT_CUSTOMERS;
     gdata.lambda     = DEFAULT_LAMBDA;
     gdata.mu         = DEFAULT_MU;
@@ -88,7 +89,7 @@ int main(int argc, char** argv)
                     printf("Incomplete argument 'R'\n");
                     exit(-1);
                 }
-                rseed = (double)atof(argv[++i]);
+                gdata.rseed = (double)atof(argv[++i]);
                 break;
             case 'S':
                 if(i+1 >= argc) {
@@ -108,17 +109,15 @@ int main(int argc, char** argv)
     }
 
     ////////////////////////////////////////////////////////////////////////
-    //Enforce restrictions and seed generator
-    if(servers > SERVER_MAX) {
+    //Enforce restrictions
+    if(servers > SERVER_MAX || servers <= 0) {
         printf("The number of servers is restricted between 1 and %d\n",SERVER_MAX);
         exit(-1);
     } else if(gdata.mu*servers < gdata.lambda) {
-        printf("%f\n",gdata.mu*servers);
         printf("The product of mu and the number of servers must be greater than lambda\n");
         exit(-1);
     }
-    if(!rseed) rseed = time(NULL);
-    srand48(rseed);
+    if(!gdata.rseed) gdata.rseed = time(NULL);
 
     ////////////////////////////////////////////////////////////////////////
     //Configuration debug statements
@@ -126,14 +125,13 @@ int main(int argc, char** argv)
     printf("Servers\t\t: %d\n",servers);
     printf("Mu\t\t: %lf\n",gdata.mu);
     printf("Lambda\t\t: %lf\n",gdata.lambda);
-    printf("Seed\t\t: %lf\n",rseed);
+    printf("Seed\t\t: %lf\n",gdata.rseed);
     printf("Iterations\t: %d\n",gdata.customers);
     if(mode == FIFO)
         printf("Mode\t\t: FIFO\n");
     else
         printf("Mode\t\t: SJF\n");
     #endif
-
 
     ////////////////////////////////////////////////////////////////////////
     //Setup queues
@@ -146,7 +144,6 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    /*
     /////////////////////////////////////////////////////////////////////////
     //Setup threads
     pthread_t      service_t[SERVER_MAX];
@@ -154,39 +151,44 @@ int main(int argc, char** argv)
     pthread_t      output_t;
     pthread_t      watchman_t;
     pthread_attr_t attributes;
-    int            i, status, terror;
+    int            status, terror;
 
     pthread_attr_init(&attributes);
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_JOINABLE);
     pthread_mutex_init(&lock,NULL);
 
-    if((terror = pthread_create(&genisis_t,NULL,(void*)genisis,NULL))) {
+    if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gdata))) {
         printf("Error creating gensis thread (Code:%d)\n",terror);
         destroy_cqueue(live);
         destroy_cqueue(dead);
         exit(-1);
     }
-    for(i = 0; i < snum; i++) {
-        if((terror = pthread_create(&service_t[i],&attributes,(void*)service,NULL))) {
+    for(i = 0; i < servers; i++) {
+        if((terror = pthread_create(&service_t[i],&attributes,(void*)service,(void*)i))) {
             printf("Error creating server thread #%d (Code:%d)\n",i,terror);
             destroy_cqueue(live);
             destroy_cqueue(dead);
             exit(-1);
         }
     }
-    for(i = 0; i < snum; i++) {
+    for(i = 0; i < servers; i++) {
         if((terror = pthread_join(service_t[i], (void **)&status))) {
             printf("Error joing service thread #%d (Code:%d)\n",i,terror);
             exit(-1);
         }
     }
-    pthread_attr_destroy(&attributes);
+    if((terror = pthread_join(genisis_t, (void **)&status))) {
+        printf("Error joing genisis thread (Code:%d)\n",terror);
+        exit(-1);
+    }
+
     /////////////////////////////////////////////////////////////////////////
+    //Clean up
+    pthread_attr_destroy(&attributes);
     pthread_mutex_destroy(&lock);
     destroy_cqueue(live);
     destroy_cqueue(dead);
     pthread_exit(NULL);
-    */
     return 0;
 }
 
@@ -197,10 +199,69 @@ void psleep(double interval) {
     nanosleep(&t,NULL);
 }
 
-void* genisis() {
-
+void* genisis(void* targ) {
+    genisis_data* gdata = (genisis_data*)targ;
+    int generated = 0;
+    customer* c = NULL;
+    timeval birthday;
+    srand48(gdata->rseed);
+    while(generated < gdata->customers) {
+        #ifdef DEBUG
+        printf("Generating(%d)...\n",generated);
+        #endif
+        gettimeofday(&birthday,NULL);
+        pthread_mutex_lock(&lock);
+        if(terminate_simulation) {
+            pthread_mutex_unlock(&lock);
+            pthread_exit(NULL);
+        }
+        c = new_customer(rexp(gdata->mu),birthday);
+        encqueue(live,c);
+        pthread_mutex_unlock(&lock);
+        generated++;
+        psleep(rexp(gdata->lambda));
+    }
+    pthread_mutex_lock(&lock);
+    genisis_complete = 1;
+    pthread_mutex_unlock(&lock);
+    pthread_exit(NULL);
+    return NULL;
 }
 
-void* service() {
+void* service(void* targ) {
+    int stid = (int)targ;
+    customer* c = NULL;
+    timeval deathday;
+    while(1) {
+        pthread_mutex_lock(&lock);
+        if(terminate_simulation) {
+            pthread_mutex_unlock(&lock);
+            pthread_exit(NULL);
+        }
+        if(live->count == 0 && genisis_complete) {
+            pthread_mutex_unlock(&lock);
+            pthread_exit(NULL);
+        }
+        c = decqueue(live);
+        pthread_mutex_unlock(&lock);
 
+        if(c == NULL) {
+            #ifdef DEBUG
+            printf("Server #%d idling...\n",stid);
+            #endif
+            psleep(0.01);
+            continue;
+        }
+
+        #ifdef DEBUG
+        printf("Server #%d servicing...\n",stid);
+        #endif
+        psleep(c->job);
+        gettimeofday(&deathday,NULL);
+        c->died = deathday;
+        pthread_mutex_lock(&lock);
+        encqueue(dead, c);
+        pthread_mutex_unlock(&lock);
+    }
+    return NULL;
 }
