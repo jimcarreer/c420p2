@@ -192,8 +192,8 @@ int main(int argc, char** argv)
     }
 
     //Initialize flags
-    sem_init(terminate, 0, 1);
-    sem_init(customers_left, 0, customers);
+    sem_init(&terminate, 0, 1);
+    sem_init(&customers_left, 0, customers);
     //Initialize mutexes
     pthread_mutex_init(&deadlock,NULL);
     pthread_mutex_init(&livelock,NULL);
