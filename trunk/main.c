@@ -13,7 +13,7 @@
 #define DEFAULT_LAMBDA    3.0
 #define DEFAULT_MU        4.0
 #define DEFAULT_CUSTOMERS 1000
-#define DEFAULT_SERVERS   2
+#define DEFAULT_SERVERS   1
 #define DEFAULT_QMODE     FIFO
 #define DEFAULT_SEED      0
 
@@ -233,7 +233,7 @@ int main(int argc, char** argv)
         servd[i].livelock       = &livelock;
         servd[i].terminate      = &terminate;
     }
-    /*
+
     //Start gensis thread
     if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
         printf("Error creating gensis thread (Code:%d)\n",terror);
@@ -254,8 +254,22 @@ int main(int argc, char** argv)
             exit(-1);
         }
     }
+    //Start statistics thread
+    if((terror = pthread_create(&genisis_t,&attributes,(void*)statistics,(void*)&statd))) {
+        printf("Error creating statistics thread (Code:%d)\n",terror);
+        destroy_cqueue(live);
+        destroy_cqueue(dead);
+        free(service_t);
+        free(servd);
+        exit(-1);
+    }
     pthread_attr_destroy(&attributes);
 
+    //Wait for genisis to finish
+    if((terror = pthread_join(genisis_t, (void **)&status))) {
+        printf("Error joing genisis thread (Code:%d)\n",terror);
+        exit(-1);
+    }
     //Wait for servers to finish
     for(i = 0; i < servers; i++) {
         if((terror = pthread_join(service_t[i], (void **)&status))) {
@@ -263,11 +277,11 @@ int main(int argc, char** argv)
             exit(-1);
         }
     }
-    //Wait for genisis to finish
-    if((terror = pthread_join(genisis_t, (void **)&status))) {
-        printf("Error joing genisis thread (Code:%d)\n",terror);
+    //Wait for statistics thread
+    if((terror = pthread_join(statistics_t, (void **)&status))) {
+        printf("Error joing statistics thread (Code:%d)\n",terror);
         exit(-1);
-    }*/
+    }
 
     /////////////////////////////////////////////////////////////////////////
     //Clean up dynamically allocated memory and mutexes
@@ -290,6 +304,7 @@ void psleep(double interval) {
 }
 
 void* genisis(void* targ) {
+    printf("In gensis thread\n");
     genisis_data* gensd = (genisis_data*)targ;
     int generated = 0;
     customer* c = NULL;
@@ -299,15 +314,16 @@ void* genisis(void* targ) {
 }
 
 void* service(void* targ) {
+
     service_data* servd = (service_data*)targ;
     customer* c = NULL;
     timeval deathday;
-
+    printf("In service thread %d\n",servd->stid);
     return NULL;
 }
 
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
-
+    printf("In statistics thread\n");
     return NULL;
 }
