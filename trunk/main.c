@@ -172,8 +172,6 @@ int main(int argc, char** argv)
     dead = new_cqueue(FIFO);
     if(!live || !dead) {
         printf("Error: queue memmory allocation failed\n");
-        if(live) destroy_cqueue(live);
-        if(dead) destroy_cqueue(dead);
         exit(-1);
     }
 
@@ -184,14 +182,10 @@ int main(int argc, char** argv)
     servd     = (service_data*)malloc(servers*sizeof(service_data));
     if(!service_t || !servd) {
         printf("Error: service thread memory allocation failed\n");
-        destroy_cqueue(live);
-        destroy_cqueue(dead);
-        if(service_t) free(service_t);
-        if(servd) free(servd);
         exit(-1);
     }
 
-    //Initialize flags
+    //Initialize semaphores
     sem_init(&terminate, 0, 1);
     sem_init(&customers_left, 0, customers);
     //Initialize mutexes
@@ -237,48 +231,36 @@ int main(int argc, char** argv)
     //Start gensis thread
     if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
         printf("Error creating gensis thread (Code:%d)\n",terror);
-        destroy_cqueue(live);
-        destroy_cqueue(dead);
-        free(service_t);
-        free(servd);
         exit(-1);
     }
     //Start server threads
     for(i = 0; i < servers; i++) {
         if((terror = pthread_create(&service_t[i],&attributes,(void*)service,(void*)(&servd[i])))) {
             printf("Error creating server thread #%d (Code:%d)\n",i,terror);
-            destroy_cqueue(live);
-            destroy_cqueue(dead);
-            free(service_t);
-            free(servd);
             exit(-1);
         }
     }
-    //Start statistics thread
-    if((terror = pthread_create(&genisis_t,&attributes,(void*)statistics,(void*)&statd))) {
+    //Start statistics threads
+    if((terror = pthread_create(&statistics_t,&attributes,(void*)statistics,(void*)&statd))) {
         printf("Error creating statistics thread (Code:%d)\n",terror);
-        destroy_cqueue(live);
-        destroy_cqueue(dead);
-        free(service_t);
-        free(servd);
         exit(-1);
     }
     pthread_attr_destroy(&attributes);
 
     //Wait for genisis to finish
-    if((terror = pthread_join(genisis_t, (void **)&status))) {
+    if((terror = pthread_join(genisis_t, NULL))) {
         printf("Error joing genisis thread (Code:%d)\n",terror);
         exit(-1);
     }
     //Wait for servers to finish
     for(i = 0; i < servers; i++) {
-        if((terror = pthread_join(service_t[i], (void **)&status))) {
+        if((terror = pthread_join(service_t[i], NULL))) {
             printf("Error joing service thread #%d (Code:%d)\n",i,terror);
             exit(-1);
         }
     }
     //Wait for statistics thread
-    if((terror = pthread_join(statistics_t, (void **)&status))) {
+    if((terror = pthread_join(statistics_t, NULL))) {
         printf("Error joing statistics thread (Code:%d)\n",terror);
         exit(-1);
     }
@@ -310,20 +292,21 @@ void* genisis(void* targ) {
     customer* c = NULL;
     timeval birthday;
     srand48(gensd->rseed);
-    return NULL;
+    pthread_exit(3);
 }
 
 void* service(void* targ) {
-
     service_data* servd = (service_data*)targ;
     customer* c = NULL;
     timeval deathday;
     printf("In service thread %d\n",servd->stid);
+    pthread_exit(3);
     return NULL;
 }
 
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
     printf("In statistics thread\n");
+    pthread_exit(3);
     return NULL;
 }
