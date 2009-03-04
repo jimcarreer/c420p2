@@ -7,7 +7,10 @@ customer.o: customer.h customer.c
 	@gcc -c customer.c
 
 proj2: main.o customer.o
-	@gcc main.o customer.o -lm -o proj2
+	@gcc main.o customer.o -lm -lpthread -o proj2
+
+debug: main.o customer.o
+	@gcc main.o customer.o -g -lm -lpthread -o debug
 
 clean:
 	@rm *.o proj2
