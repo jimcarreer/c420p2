@@ -56,11 +56,12 @@ typedef struct _service_data {
 
 //Prototypes and inline functions
 inline double rexp(double l) {return -log(1.0-drand48())/l;}
-void* genisis(void*);
-void* service(void*);
-void* statistics(void*);
-void* watchman(void);
-void  psleep(double interval);
+void*   genisis(void*);
+void*   service(void*);
+void*   statistics(void*);
+void*   watchman(void);
+void    psleep(double interval);
+double  time_elapsed(timeval finish, timeval start);
 
 int main(int argc, char** argv)
 {
@@ -285,6 +286,12 @@ void psleep(double interval) {
     nanosleep(&t,NULL);
 }
 
+double time_elapsed(timeval f, timeval s) {
+    double  sec = (f.tv_sec-s.tv_sec);
+    double usec = (f.tv_usec-s.tv_usec)/1000000;
+    return (double)(sec+usec);
+}
+
 void* genisis(void* targ) {
     genisis_data* gensd = (genisis_data*)targ;
     customer* c = NULL;
@@ -332,9 +339,9 @@ void* genisis(void* targ) {
 void* service(void* targ) {
     service_data* servd = (service_data*)targ;
     customer* c = NULL;
-    timeval deathday, started, now;
+    timeval deathday, started;
     int customers_left, terminate, served = 0;
-    double service_time = 0;
+    double utilized, worked = 0;
 
     gettimeofday(&started, NULL);
     while(1) {
@@ -360,20 +367,23 @@ void* service(void* targ) {
         }
 
         //Service customer
-        service_time = c->job;
+        worked += c->job;
         psleep(c->job);
         gettimeofday(&deathday,NULL);
         c->died = deathday;
         served++;
+
+        //Calculate utilization
+        utilized = 100*worked/time_elapsed(deathday,started);
 
         //Enqueue customer in dead queue
         pthread_mutex_lock(servd->deadlock);
         encqueue(servd->dead, c);
         pthread_mutex_unlock(servd->deadlock);
     }
-    gettimeofday(&now, NULL);
-
-    printf("Utilization:\%%3.2lf",(double)service_time/(now.tv_sec-started.tv_sec+((now.tv_usec+started.tv_usec)/1000000)));
+    gettimeofday(&deathday,NULL);
+    utilized = 100*worked/time_elapsed(deathday,started);
+    printf("Utilizaton: %3.2lf\%\n",utilized);
 
     return NULL;
 }
