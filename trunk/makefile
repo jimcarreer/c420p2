@@ -1,4 +1,4 @@
-all: proj2
+all: iQ
 
 main.o: main.c
 	@gcc -c main.c
@@ -6,8 +6,11 @@ main.o: main.c
 customer.o: customer.h customer.c
 	@gcc -c customer.c
 
-proj2: main.o customer.o
-	@gcc main.o customer.o -lm -lpthread -o proj2
+simout.o: simout.h simout.c
+    @gcc -c simout.c
+
+iQ: main.o customer.o simout.o
+	@gcc main.o simout.o customer.o -lm -lcurses -lpthread -o iQ
 
 debug: main.o customer.o
 	@gcc main.o customer.o -g -lm -lpthread -o debug
