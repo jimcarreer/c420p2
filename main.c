@@ -336,7 +336,7 @@ void* service(void* targ) {
     int customers_left, terminate, served = 0;
     double service_time = 0;
 
-    gettimeofday(&started);
+    gettimeofday(&started, NULL);
     while(1) {
         //Check terminate semaphore
         sem_getvalue(servd->terminate, &terminate);
@@ -371,7 +371,7 @@ void* service(void* targ) {
         encqueue(servd->dead, c);
         pthread_mutex_unlock(servd->deadlock);
     }
-    gettimeofday(&now);
+    gettimeofday(&now, NULL);
 
     printf("Utilization:\%%3.2lf",(double)service_time/(now.tv_sec-started.tv_sec+((now.tv_usec+started.tv_usec)/1000000)))
 
