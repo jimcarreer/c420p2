@@ -226,7 +226,7 @@ int main(int argc, char** argv)
         servd[i].livelock       = &livelock;
         servd[i].terminate      = &terminate;
     }
-
+printf("ETA:%5.2lf\n",(customers/(mu-lambda)));
     //Start gensis thread
     if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
         printf("Error creating gensis thread (Code:%d)\n",terror);
@@ -345,8 +345,6 @@ void* service(void* targ) {
         if(customers_left == 0 && servd->live->count == 0)
             break;
 
-        printf("%d:%d\n",customers_left, servd->live->count);
-
         //Dequeue customer
         pthread_mutex_lock(servd->livelock);
         c = decqueue(servd->live);
@@ -357,7 +355,7 @@ void* service(void* targ) {
             psleep(0.01);
             continue;
         }
-        printf("Servicing customer %d\n",served);
+
         //Service customer
         psleep(c->job);
         gettimeofday(&deathday,NULL);
@@ -374,6 +372,11 @@ void* service(void* targ) {
 }
 
 void* statistics(void* targ) {
+
+    /////////////////////////////////////////////////////////////////////////
+    // Total number of jobs         : N
+    // Average Turn Around Time     : T = 1/(mu-lambda)
+    // Estimated time of completion : N*T = N/(mu-lambda)
     statistics_data* statd = (statistics_data*)targ;
 
     return NULL;
