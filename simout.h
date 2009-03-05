@@ -1,7 +1,7 @@
 #ifndef SIMOUT_H_INCLUDED
 #define SIMOUT_H_INCLUDED
 
-#include <curses.h>
+#include <ncurses.h>
 
 static WINDOW* mainwin;
 static WINDOW* screen;
