@@ -10,7 +10,7 @@ void screen_init(void) {
     screen = newwin(25, 50, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
     curs_set(0);
-    mvwprintw(screen,0,1"Queue Simulation Statistics");
+    mvwprintw(screen,0,1,"Queue Simulation Statistics");
 }
 
 void screen_end(void) {
