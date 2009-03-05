@@ -345,11 +345,19 @@ void* service(void* targ) {
         if(customers_left == 0 && servd->live->count == 0)
             break;
 
+        printf("%d:%d\n",customers_left, servd->live->count);
+
         //Dequeue customer
         pthread_mutex_lock(servd->livelock);
         c = decqueue(servd->live);
         pthread_mutex_unlock(servd->livelock);
 
+        //No customer in line apparently, idle
+        if(c == NULL) {
+            psleep(0.01);
+            continue;
+        }
+        printf("Servicing customer %d\n",served);
         //Service customer
         psleep(c->job);
         gettimeofday(&deathday,NULL);
