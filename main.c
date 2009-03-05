@@ -27,6 +27,7 @@ typedef struct _genisis_data {
     cqueue*          live;            //Reference to queue for live (unserviced) customers
     pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
     pthread_mutex_t* dmemlock;        //Reference to mutex to lock for memory allocation
+    pthread_mutex_t* displock;        //Reference to mutext to lock display for updating
     sem_t*           terminate;       //Reference to terminate simulation semaphore
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } genisis_data;
@@ -57,6 +58,10 @@ typedef struct _service_data {
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } service_data;
 
+typedef struct _watchman_data {
+    sem_t*           terminate;       //Reference to terminate simulation flag
+} watchman_data;
+
 //Prototypes and inline functions
 inline double rexp(double l) {return -log(1.0-drand48())/l;}
 void*   genisis(void*);
@@ -77,6 +82,7 @@ int main(int argc, char** argv)
     genisis_data     gensd;
     statistics_data  statd;
     service_data*    servd;
+    watchman_data    watmd;
     ////////////////////////////////////////////////////////////////////////
     //Thread related variables
     pthread_mutex_t  deadlock;
@@ -208,7 +214,10 @@ int main(int argc, char** argv)
     gensd.live           = live;
     gensd.livelock       = &livelock;
     gensd.dmemlock       = &dmemlock;
+    gensd.displock       = &displock;
     gensd.terminate      = &terminate;
+    //Initialize watchman data
+    watmd.terminate      = &terminate;
     //Initialize statistics data
     statd.customers_left = &customers_left;
     statd.customers      = customers;
@@ -237,6 +246,12 @@ int main(int argc, char** argv)
     //Initialize Display Screen
     screen_init();
 
+    //Start watchman thread
+    if((terror = pthread_create(&genisis_t,&attirbutes,(void*)watchman,(void*)watmd))) {
+        screen_end();
+        printf("Error creating watchman thread (Code:%d)\n",terror);
+        exit(-1);
+    }
     //Start gensis thread
     if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
         screen_end();
@@ -277,6 +292,12 @@ int main(int argc, char** argv)
     if((terror = pthread_join(statistics_t, NULL))) {
         screen_end();
         printf("Error joing statistics thread (Code:%d)\n",terror);
+        exit(-1);
+    }
+    //Wait for statistics thread
+    if((terror = pthread_join(watchman_t, NULL))) {
+        screen_end();
+        printf("Error joing watchman thread (Code:%d)\n",terror);
         exit(-1);
     }
 
@@ -333,6 +354,10 @@ void* genisis(void* targ) {
             sem_getvalue(gensd->terminate, &terminate);
             if(terminate == 1)
                 sem_wait(gensd->terminate);
+            pthread_mutex_lock(gensd->displock);
+            screen_end();
+            pthread_mutex_unlock(gensd->displock);
+            printf("Ran out of memory!\n");
             pthread_exit(NULL);
         }
 
@@ -421,5 +446,20 @@ void* service(void* targ) {
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
 
+    return NULL;
+}
+
+void* watchman(void* targ) {
+    char ch;
+    watchman_data* watmd = (watchman_data*)targ;
+    while(1) {
+        ch = getch();
+        if(ch == 'q') {
+            sem_getvalue(gensd->terminate, &terminate);
+            if(terminate == 1)
+                sem_wait(gensd->terminate);
+            pthread_exit(NULL);
+        }
+    }
     return NULL;
 }
