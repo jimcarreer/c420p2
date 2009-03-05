@@ -5,7 +5,7 @@ void screen_init(void) {
     noecho();
     cbreak();
     nodelay(mainwin, TRUE);
-    refesh();
+    refresh();
     wrefresh(mainwin);
     screen = newwin(50, 30, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
