@@ -226,7 +226,7 @@ int main(int argc, char** argv)
         servd[i].livelock       = &livelock;
         servd[i].terminate      = &terminate;
     }
-printf("ETA:%5.2lf\n",(customers/(mu-lambda)));
+
     //Start gensis thread
     if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
         printf("Error creating gensis thread (Code:%d)\n",terror);
@@ -290,6 +290,7 @@ void* genisis(void* targ) {
     customer* c = NULL;
     timeval birthday;
     int customers_left, terminate;
+
     srand48(gensd->rseed);
 
     sem_getvalue(gensd->customers_left, &customers_left);
@@ -331,9 +332,11 @@ void* genisis(void* targ) {
 void* service(void* targ) {
     service_data* servd = (service_data*)targ;
     customer* c = NULL;
-    timeval deathday;
+    timeval deathday, started, now;
     int customers_left, terminate, served = 0;
+    double service_time = 0;
 
+    gettimeofday(&started);
     while(1) {
         //Check terminate semaphore
         sem_getvalue(servd->terminate, &terminate);
@@ -357,6 +360,7 @@ void* service(void* targ) {
         }
 
         //Service customer
+        service_time = c->job;
         psleep(c->job);
         gettimeofday(&deathday,NULL);
         c->died = deathday;
@@ -367,16 +371,14 @@ void* service(void* targ) {
         encqueue(servd->dead, c);
         pthread_mutex_unlock(servd->deadlock);
     }
+    gettimeofday(&now);
+
+    printf("Utilization:\%%3.2lf",(double)service_time/(now.tv_sec-started.tv_sec+((now.tv_usec+started.tv_usec)/1000000)))
 
     return NULL;
 }
 
 void* statistics(void* targ) {
-
-    /////////////////////////////////////////////////////////////////////////
-    // Total number of jobs         : N
-    // Average Turn Around Time     : T = 1/(mu-lambda)
-    // Estimated time of completion : N*T = N/(mu-lambda)
     statistics_data* statd = (statistics_data*)targ;
 
     return NULL;
