@@ -7,7 +7,7 @@ void screen_init(void) {
     nodelay(mainwin, TRUE);
     refresh();
     wrefresh(mainwin);
-    screen = newwin(50, 30, 1, 1);
+    screen = newwin(25, 50, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
 }
 
