@@ -247,7 +247,7 @@ int main(int argc, char** argv)
     screen_init();
 
     //Start watchman thread
-    if((terror = pthread_create(&genisis_t,&attributes,(void*)watchman,(void*)&watmd))) {
+    if((terror = pthread_create(&watchman_t,&attributes,(void*)watchman,(void*)&watmd))) {
         screen_end();
         printf("Error creating watchman thread (Code:%d)\n",terror);
         exit(-1);
@@ -454,7 +454,7 @@ void* watchman(void* targ) {
     watchman_data* watmd = (watchman_data*)targ;
     int terminate;
     while(1) {
-        ch = getch();
+        ch = getchar();
         if(ch == 'q') {
             sem_getvalue(watmd->terminate, &terminate);
             if(terminate == 1)
