@@ -67,7 +67,7 @@ inline double rexp(double l) {return -log(1.0-drand48())/l;}
 void*   genisis(void*);
 void*   service(void*);
 void*   statistics(void*);
-void*   watchman(void);
+void*   watchman(void*);
 void    psleep(double interval);
 double  time_elapsed(timeval finish, timeval start);
 
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
     screen_init();
 
     //Start watchman thread
-    if((terror = pthread_create(&genisis_t,&attirbutes,(void*)watchman,(void*)watmd))) {
+    if((terror = pthread_create(&genisis_t,&attributes,(void*)watchman,(void*)watmd))) {
         screen_end();
         printf("Error creating watchman thread (Code:%d)\n",terror);
         exit(-1);
