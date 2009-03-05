@@ -355,7 +355,7 @@ void* genisis(void* targ) {
 void* service(void* targ) {
     service_data* servd = (service_data*)targ;
     customer* c = NULL;
-    timeval deathday, started;
+    timeval deathday, started, now;
     int customers_left, terminate, served = 0;
     double utilized, worked = 0;
 
@@ -368,8 +368,15 @@ void* service(void* targ) {
 
         //Check to see if there is no more work
         sem_getvalue(servd->customers_left, &customers_left);
-        if(customers_left == 0 && servd->live->count == 0)
+        if(customers_left == 0 && servd->live->count == 0) {
+            //Calculate utilization and update display
+            gettimeofday(&now,NULL);
+            utilized = 100*worked/time_elapsed(now,started);
+            pthread_mutex_lock(servd->displock);
+            update_server(servd->stid,utilized,served);
+            pthread_mutex_unlock(servd->displock);
             break;
+        }
 
         //Dequeue customer
         pthread_mutex_lock(servd->livelock);
