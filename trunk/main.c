@@ -20,7 +20,7 @@
 #define DEFAULT_SEED      0
 
 //Thread input structures
-typedef struct _genisis_data {
+typedef struct _genesis_data {
     int              customers;       //Total number of customers to generate
     double           lambda;          //Arrival time exponential distribution parameter
     double           mu;              //Service time exponential distribution parameter
@@ -31,7 +31,7 @@ typedef struct _genisis_data {
     pthread_mutex_t* displock;        //Reference to mutext to lock display for updating
     sem_t*           terminate;       //Reference to terminate simulation semaphore
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
-} genisis_data;
+} genesis_data;
 
 typedef struct _statistics_data {
     int              customers;       //Total number of customers being generated
@@ -61,7 +61,7 @@ typedef struct _service_data {
 
 //Prototypes and inline functions
 inline double rexp(double l) {return -log(1.0-drand48())/l;}
-void*   genisis(void*);
+void*   genesis(void*);
 void*   service(void*);
 void*   statistics(void*);
 void*   watchman(void*);
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     cqueue*          dead;
     ////////////////////////////////////////////////////////////////////////
     //Thread parameters
-    genisis_data     gensd;
+    genesis_data     gensd;
     statistics_data  statd;
     service_data*    servd;
     ////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     sem_t            customers_left;
 
     pthread_t*       service_t;
-    pthread_t        genisis_t;
+    pthread_t        genesis_t;
     pthread_t        statistics_t;
 
     pthread_attr_t   attributes;
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
     pthread_attr_init(&attributes);
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_JOINABLE);
 
-    //Initialize genisis data
+    //Initialize genesis data
     gensd.customers_left = &customers_left;
     gensd.customers      = customers;
     gensd.lambda         = lambda;
@@ -240,7 +240,7 @@ int main(int argc, char** argv)
     screen_init();
 
     //Start gensis thread
-    if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
+    if((terror = pthread_create(&genesis_t,&attributes,(void*)genesis,(void*)&gensd))) {
         screen_end();
         printf("Error creating gensis thread (Code:%d)\n",terror);
         exit(-1);
@@ -261,10 +261,10 @@ int main(int argc, char** argv)
     }
     pthread_attr_destroy(&attributes);
 
-    //Wait for genisis to finish
-    if((terror = pthread_join(genisis_t, NULL))) {
+    //Wait for genesis to finish
+    if((terror = pthread_join(genesis_t, NULL))) {
         screen_end();
-        printf("Error joing genisis thread (Code:%d)\n",terror);
+        printf("Error joing genesis thread (Code:%d)\n",terror);
         exit(-1);
     }
     //Wait for servers to finish
@@ -284,6 +284,7 @@ int main(int argc, char** argv)
 
     /////////////////////////////////////////////////////////////////////////
     //Clean up dynamically allocated memory, mutexes, and semaphores
+
     screen_end();
     pthread_mutex_destroy(&dmemlock);
     pthread_mutex_destroy(&livelock);
@@ -310,8 +311,8 @@ double time_elapsed(timeval f, timeval s) {
     return (double)(sec+usec);
 }
 
-void* genisis(void* targ) {
-    genisis_data* gensd = (genisis_data*)targ;
+void* genesis(void* targ) {
+    genesis_data* gensd = (genesis_data*)targ;
     customer* c = NULL;
     timeval birthday;
     int customers_left, terminate;
@@ -426,6 +427,7 @@ void* service(void* targ) {
 
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
+
 
     return NULL;
 }
