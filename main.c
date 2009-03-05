@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <math.h>
 #include "customer.h"
+#include "simout.h"
 
 #define DEBUG
 
@@ -40,6 +41,7 @@ typedef struct _statistics_data {
     pthread_mutex_t* deadlock;        //Reference to mutex to lock dead queue
     pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
     pthread_mutex_t* dmemlock;        //Reference to mutex to lock for memory allocation
+    pthread_mutex_t* displock;        //Reference to mutext to lock display for updating
     sem_t*           terminate;       //Reference to terminate simulation flag
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } statistics_data;
@@ -50,6 +52,7 @@ typedef struct _service_data {
     cqueue*          dead;            //Reference to queue for dead (serviced) customers
     pthread_mutex_t* deadlock;        //Reference to mutex to lock dead queue
     pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
+    pthread_mutex_t* displock;        //Reference to mutex to lock display for updating
     sem_t*           terminate;       //Reference to terminate simulation flag
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } service_data;
@@ -79,6 +82,7 @@ int main(int argc, char** argv)
     pthread_mutex_t  deadlock;
     pthread_mutex_t  livelock;
     pthread_mutex_t  dmemlock;
+    pthread_mutex_t  displock;
 
     sem_t            terminate;
     sem_t            customers_left;
@@ -216,6 +220,7 @@ int main(int argc, char** argv)
     statd.livelock       = &livelock;
     statd.deadlock       = &deadlock;
     statd.dmemlock       = &dmemlock;
+    statd.displock       = &displock;
     statd.terminate      = &terminate;
     //Initialize service data
     for(i = 0; i < servers; i++) {
@@ -225,23 +230,30 @@ int main(int argc, char** argv)
         servd[i].dead           = dead;
         servd[i].deadlock       = &deadlock;
         servd[i].livelock       = &livelock;
+        servd[i].displock       = &displock;
         servd[i].terminate      = &terminate;
     }
 
+    //Initialize Display Screen
+    screen_init();
+
     //Start gensis thread
     if((terror = pthread_create(&genisis_t,&attributes,(void*)genisis,(void*)&gensd))) {
+        screen_end();
         printf("Error creating gensis thread (Code:%d)\n",terror);
         exit(-1);
     }
     //Start server threads
     for(i = 0; i < servers; i++) {
         if((terror = pthread_create(&service_t[i],&attributes,(void*)service,(void*)(&servd[i])))) {
+            screen_end();
             printf("Error creating server thread #%d (Code:%d)\n",i,terror);
             exit(-1);
         }
     }
     //Start statistics threads
     if((terror = pthread_create(&statistics_t,&attributes,(void*)statistics,(void*)&statd))) {
+        screen_end();
         printf("Error creating statistics thread (Code:%d)\n",terror);
         exit(-1);
     }
@@ -249,24 +261,28 @@ int main(int argc, char** argv)
 
     //Wait for genisis to finish
     if((terror = pthread_join(genisis_t, NULL))) {
+        screen_end();
         printf("Error joing genisis thread (Code:%d)\n",terror);
         exit(-1);
     }
     //Wait for servers to finish
     for(i = 0; i < servers; i++) {
         if((terror = pthread_join(service_t[i], NULL))) {
+            screen_end();
             printf("Error joing service thread #%d (Code:%d)\n",i,terror);
             exit(-1);
         }
     }
     //Wait for statistics thread
     if((terror = pthread_join(statistics_t, NULL))) {
+        screen_end();
         printf("Error joing statistics thread (Code:%d)\n",terror);
         exit(-1);
     }
 
     /////////////////////////////////////////////////////////////////////////
     //Clean up dynamically allocated memory, mutexes, and semaphores
+    screen_end();
     pthread_mutex_destroy(&dmemlock);
     pthread_mutex_destroy(&livelock);
     pthread_mutex_destroy(&deadlock);
@@ -373,17 +389,24 @@ void* service(void* targ) {
         c->died = deathday;
         served++;
 
-        //Calculate utilization
+        //Calculate utilization and update display
         utilized = 100*worked/time_elapsed(deathday,started);
+        pthread_mutex_lock(servd->displock);
+        update_server(servd->stid,utilized,served);
+        pthread_mutex_unlock(servd->displock);
 
         //Enqueue customer in dead queue
         pthread_mutex_lock(servd->deadlock);
         encqueue(servd->dead, c);
         pthread_mutex_unlock(servd->deadlock);
     }
+
+    //Final dipslay update
     gettimeofday(&deathday,NULL);
     utilized = 100*worked/time_elapsed(deathday,started);
-    printf("Utilizaton: %3.2lf\%\n",utilized);
+    pthread_mutex_lock(servd->displock);
+    update_server(servd->stid,utilized,served);
+    pthread_mutex_unlock(servd->displock);
 
     return NULL;
 }
