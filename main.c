@@ -20,38 +20,38 @@
 //Thread input structures
 typedef struct _genisis_data {
     int              customers;       //Total number of customers to generate
-    double           lambda;          //Arrival time exponentional distribution parameter
-    double           mu;              //Service time exponentional distribution parameter
+    double           lambda;          //Arrival time exponential distribution parameter
+    double           mu;              //Service time exponential distribution parameter
     double           rseed;           //Seed for random numbers
-    cqueue*          live;            //Referance to queue for live (unserviced) customers
-    pthread_mutex_t* livelock;        //Referance to mutex to lock live queue
-    pthread_mutex_t* dmemlock;        //Referance to mutex to lock for memory allocation
-    sem_t*           terminate;       //Referance to terminate simulation flag
-    sem_t*           customers_left;  //Referance to number of customers left to generate
+    cqueue*          live;            //Reference to queue for live (unserviced) customers
+    pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
+    pthread_mutex_t* dmemlock;        //Reference to mutex to lock for memory allocation
+    sem_t*           terminate;       //Reference to terminate simulation semaphore
+    sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } genisis_data;
 
 typedef struct _statistics_data {
     int              customers;       //Total number of customers being generated
     int              servers;         //Total number of servers
-    double           lambda;          //Arrival time exponentional distribution parameter
-    double           mu;              //Service time exponentional distribution parameter
-    cqueue*          live;            //Referance to queue for live (unserviced) customers
-    cqueue*          dead;            //Referance to queue for dead (serviced) customers
-    pthread_mutex_t* deadlock;        //Referance to mutex to lock dead queue
-    pthread_mutex_t* livelock;        //Referance to mutex to lock live queue
-    pthread_mutex_t* dmemlock;        //Referance to mutex to lock for memory allocation
-    sem_t*           terminate;       //Referance to terminate simulation flag
-    sem_t*           customers_left;  //Referance to number of customers left to generate
+    double           lambda;          //Arrival time exponential distribution parameter
+    double           mu;              //Service time exponential distribution parameter
+    cqueue*          live;            //Reference to queue for live (unserviced) customers
+    cqueue*          dead;            //Reference to queue for dead (serviced) customers
+    pthread_mutex_t* deadlock;        //Reference to mutex to lock dead queue
+    pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
+    pthread_mutex_t* dmemlock;        //Reference to mutex to lock for memory allocation
+    sem_t*           terminate;       //Reference to terminate simulation flag
+    sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } statistics_data;
 
 typedef struct _service_data {
     int              stid;            //Service thread number
-    cqueue*          live;            //Referance to queue for live (unserviced) customers
-    cqueue*          dead;            //Referance to queue for dead (serviced) customers
-    pthread_mutex_t* deadlock;        //Referance to mutex to lock dead queue
-    pthread_mutex_t* livelock;        //Referance to mutex to lock live queue
-    sem_t*           terminate;       //Referance to terminate simulation flag
-    sem_t*           customers_left;  //Referance to number of customers left to generate
+    cqueue*          live;            //Reference to queue for live (unserviced) customers
+    cqueue*          dead;            //Reference to queue for dead (serviced) customers
+    pthread_mutex_t* deadlock;        //Reference to mutex to lock dead queue
+    pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
+    sem_t*           terminate;       //Reference to terminate simulation flag
+    sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } service_data;
 
 //Prototypes and inline functions
@@ -64,16 +64,16 @@ void  psleep(double interval);
 
 int main(int argc, char** argv)
 {
-    ////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
     //Queue variables
     cqueue*          live;
     cqueue*          dead;
-    ////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
     //Thread parameters
     genisis_data     gensd;
     statistics_data  statd;
     service_data*    servd;
-    ////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
     //Thread related variables
     pthread_mutex_t  deadlock;
     pthread_mutex_t  livelock;
@@ -88,9 +88,8 @@ int main(int argc, char** argv)
     pthread_t        watchman_t;
 
     pthread_attr_t   attributes;
-
-    int              status, terror, i;
-    ////////////////////////////////////
+    int              terror, i;
+    ////////////////////////////////////////////////////////////////////////
     //Simulation related variables
     cqmode mode      = DEFAULT_QMODE;
     int    servers   = DEFAULT_SERVERS;
@@ -266,15 +265,16 @@ int main(int argc, char** argv)
     }
 
     /////////////////////////////////////////////////////////////////////////
-    //Clean up dynamically allocated memory and mutexes
+    //Clean up dynamically allocated memory, mutexes, and semaphores
     pthread_mutex_destroy(&dmemlock);
     pthread_mutex_destroy(&livelock);
     pthread_mutex_destroy(&deadlock);
+    sem_destroy(&customers_left);
+    sem_destroy(&terminate);
     destroy_cqueue(live);
     destroy_cqueue(dead);
     free(service_t);
     free(servd);
-
     return 0;
 }
 
@@ -286,27 +286,87 @@ void psleep(double interval) {
 }
 
 void* genisis(void* targ) {
-    printf("In gensis thread\n");
     genisis_data* gensd = (genisis_data*)targ;
-    int generated = 0;
     customer* c = NULL;
     timeval birthday;
+    int customers_left, terminate;
     srand48(gensd->rseed);
-    pthread_exit(3);
+
+    sem_getvalue(gensd->customers_left, &customers_left);
+    while(customers_left > 0) {
+        //Check terminate semaphore
+        sem_getvalue(gensd->terminate, &terminate);
+        if(terminate == 0)
+            pthread_exit(NULL);
+        //Create new customer
+        gettimeofday(&birthday,NULL);
+        pthread_mutex_lock(gensd->dmemlock);
+        c = new_customer(rexp(gensd->mu),birthday);
+        pthread_mutex_unlock(gensd->dmemlock);
+
+        //Memmory allocation error set terminate if its not set already
+        if(!c) {
+            sem_getvalue(gensd->terminate, &terminate);
+            if(terminate == 1)
+                sem_wait(gensd->terminate);
+            pthread_exit(NULL);
+        }
+
+        //Enqueue new customer
+        pthread_mutex_lock(gensd->livelock);
+        encqueue(gensd->live, c);
+        pthread_mutex_unlock(gensd->livelock);
+
+        //Decrement customers left and set loop control
+        sem_wait(gensd->customers_left);
+        sem_getvalue(gensd->customers_left, &customers_left);
+
+        //Sleep until next customer arrives
+        psleep(rexp(gensd->lambda));
+    }
+
+    return NULL;
 }
 
 void* service(void* targ) {
     service_data* servd = (service_data*)targ;
     customer* c = NULL;
     timeval deathday;
-    printf("In service thread %d\n",servd->stid);
-    pthread_exit(3);
+    int customers_left, terminate, served = 0;
+
+    while(1) {
+        //Check terminate semaphore
+        sem_getvalue(servd->terminate, &terminate);
+        if(terminate == 0)
+            pthread_exit(NULL);
+
+        //Check to see if there is no more work
+        sem_getvalue(servd->customers_left, &customers_left);
+        if(customers_left == 0 && servd->live->count == 0)
+            break;
+
+        //Dequeue customer
+        pthread_mutex_lock(servd->livelock);
+        c = decqueue(servd->live);
+        pthread_mutex_unlock(servd->livelock);
+
+        //Service customer
+        psleep(c->job);
+        gettimeofday(&deathday,NULL);
+        c->died = deathday;
+        served++;
+
+        //Enqueue customer in dead queue
+        pthread_mutex_lock(servd->deadlock);
+        encqueue(servd->dead, c);
+        pthread_mutex_unlock(servd->deadlock);
+    }
+
     return NULL;
 }
 
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
-    printf("In statistics thread\n");
-    pthread_exit(3);
+
     return NULL;
 }
