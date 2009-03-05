@@ -452,6 +452,7 @@ void* statistics(void* targ) {
 void* watchman(void* targ) {
     char ch;
     watchman_data* watmd = (watchman_data*)targ;
+    int terminate;
     while(1) {
         ch = getch();
         if(ch == 'q') {
