@@ -19,7 +19,7 @@ void screen_end(void) {
 
 void update_server(int stid, double utilized, int served) {
     curs_set(0);
-    int y = 0 + stid + (3*stid);
+    int y = 6 + stid + (3*stid);
     mvwprintw(screen,y+0,2,"Server #%d Statistics",stid+1);
     mvwprintw(screen,y+1,2,"Served   : %d",served);
     mvwprintw(screen,y+2,2,"Utilized : %3.2lf",utilized);
