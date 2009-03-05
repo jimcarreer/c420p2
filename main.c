@@ -455,7 +455,7 @@ void* watchman(void* targ) {
     while(1) {
         ch = getch();
         if(ch == 'q') {
-            sem_getvalue(gensd->terminate, &terminate);
+            sem_getvalue(watmd->terminate, &terminate);
             if(terminate == 1)
                 sem_wait(gensd->terminate);
             pthread_exit(NULL);
