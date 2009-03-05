@@ -4,6 +4,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <math.h>
+#include <ncurses.h>
 #include "customer.h"
 #include "simout.h"
 
@@ -454,7 +455,7 @@ void* watchman(void* targ) {
     watchman_data* watmd = (watchman_data*)targ;
     int terminate;
     while(1) {
-        ch = getchar();
+        ch = getch();
         if(ch == 'q') {
             sem_getvalue(watmd->terminate, &terminate);
             if(terminate == 1)
