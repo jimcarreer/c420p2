@@ -91,6 +91,7 @@ int main(int argc, char** argv)
 
     pthread_t*       service_t;
     pthread_t        genisis_t;
+    pthread_t        statistics_t;
 
     pthread_attr_t   attributes;
     int              terror, i;
