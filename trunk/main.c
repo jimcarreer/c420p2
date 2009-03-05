@@ -373,7 +373,7 @@ void* service(void* targ) {
     }
     gettimeofday(&now, NULL);
 
-    printf("Utilization:\%%3.2lf",(double)service_time/(now.tv_sec-started.tv_sec+((now.tv_usec+started.tv_usec)/1000000)))
+    printf("Utilization:\%%3.2lf",(double)service_time/(now.tv_sec-started.tv_sec+((now.tv_usec+started.tv_usec)/1000000)));
 
     return NULL;
 }
