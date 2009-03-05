@@ -247,7 +247,7 @@ int main(int argc, char** argv)
     screen_init();
 
     //Start watchman thread
-    if((terror = pthread_create(&genisis_t,&attributes,(void*)watchman,(void*)watmd))) {
+    if((terror = pthread_create(&genisis_t,&attributes,(void*)watchman,(void*)&watmd))) {
         screen_end();
         printf("Error creating watchman thread (Code:%d)\n",terror);
         exit(-1);
