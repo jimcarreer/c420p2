@@ -2,7 +2,7 @@
 
 void screen_init(void) {
     mainwin = initscr();
-    //noecho();
+    noecho();
     cbreak();
     nodelay(mainwin, TRUE);
     refresh();
@@ -19,10 +19,10 @@ void screen_end(void) {
 
 void update_server(int stid, double utilized, int served) {
     curs_set(0);
-    int y = 6 + stid + (3*stid);
-    mvwprintw(screen,y+0,2,"Server #%d Statistics",stid+1);
-    mvwprintw(screen,y+1,2,"Served   : %d",served);
-    mvwprintw(screen,y+2,2,"Utilized : %3.2lf",utilized);
+    int y = 6 + stid + (2*stid);
+    mvwprintw(screen,y+0,1,"Server #%d Statistics",stid+1);
+    mvwprintw(screen,y+1,1,"Served   : %d",served);
+    mvwprintw(screen,y+2,1,"Utilized : %3.2lf",utilized);
     wrefresh(screen);
     refresh();
 }
