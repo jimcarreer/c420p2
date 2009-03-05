@@ -2,7 +2,7 @@
 
 void screen_init(void) {
     mainwin = initscr();
-    noecho();
+    //noecho();
     cbreak();
     nodelay(mainwin, TRUE);
     refresh();
