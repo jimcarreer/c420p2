@@ -1,7 +1,7 @@
 #include "simout.h"
 
 void screen_init(void) {
-    mainwin = initscr
+    mainwin = initscr();
     noecho();
     cbreak();
     nodelay(mainwin, TRUE);
