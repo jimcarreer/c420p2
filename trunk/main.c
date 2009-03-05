@@ -369,12 +369,6 @@ void* service(void* targ) {
         //Check to see if there is no more work
         sem_getvalue(servd->customers_left, &customers_left);
         if(customers_left == 0 && servd->live->count == 0) {
-            //Calculate utilization and update display
-            gettimeofday(&now,NULL);
-            utilized = 100*worked/time_elapsed(now,started);
-            pthread_mutex_lock(servd->displock);
-            update_server(servd->stid,utilized,served);
-            pthread_mutex_unlock(servd->displock);
             break;
         }
 
@@ -385,6 +379,12 @@ void* service(void* targ) {
 
         //No customer in line apparently, idle
         if(c == NULL) {
+            //Calculate utilization and update display
+            gettimeofday(&now,NULL);
+            utilized = 100*worked/time_elapsed(now,started);
+            pthread_mutex_lock(servd->displock);
+            update_server(servd->stid,utilized,served);
+            pthread_mutex_unlock(servd->displock);
             psleep(0.01);
             continue;
         }
