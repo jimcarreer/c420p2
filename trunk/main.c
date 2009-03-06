@@ -68,9 +68,6 @@ int main(int argc, char** argv)
     cqueue*          live;   //Stores unservice customers
     cqueue*          dead;   //Stores serviced customers not yet analyzed
     ////////////////////////////////////////////////////////////////////////
-    // Time related parameters
-    timeval started;
-    ////////////////////////////////////////////////////////////////////////
     //Thread parameters
     genesis_data     gensd;
     statistics_data  statd;
@@ -174,9 +171,9 @@ int main(int argc, char** argv)
         printf("Error: queue memmory allocation failed\n");
         exit(-1);
     }
-    gettimeofday(&started,NULL);
+    //Make all the customers and enqueue them into source
     for(i = 0; i < customers; i++) {
-        c = new_customer(0.0,started);
+        c = new_blank_customer();
         if(c == NULL) {
             printf("Error: queue memmory allocation failed\n");
             exit(-1);
@@ -414,11 +411,8 @@ void* statistics(void* targ) {
     double wait_sum = 0; //Sum of the wait time
     int    analyzed = 0; //Number of customers analyzed
 
+    gettimeofday(&started,NULL);
     while(1) {
-        pthread_mutex_lock(statd->displock);
-
-        pthread_mutex_unlock(statd->displock);
-
         //Dequeue dead customer
         pthread_mutex_lock(statd->deadlock);
         c = decqueue(statd->dead);
@@ -434,6 +428,12 @@ void* statistics(void* targ) {
         if(customers_left == 0 && l == 0 && c == NULL) {
             break;
         }
+
+        //Update Progress
+        gettimeofday(&now,NULL);
+        pthread_mutex_lock(statd->displock);
+        update_progress(time_elapsed(started,now),(double)analyzed/statd->customers);
+        pthread_mutex_unlock(statd->displock);
 
         //Update queue length statistics
         polled++;

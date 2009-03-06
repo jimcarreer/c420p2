@@ -33,6 +33,7 @@ customer* decqueue(cqueue* queue);
 void      encqueue(cqueue* queue, customer* customer);
 cqueue*   new_cqueue(cqmode mode);
 customer* new_customer(double job, timeval born);
+customer* new_blank_customer(void);
 void      destroy_cqueue(cqueue* queue);
 void      destroy_customer(customer* condemed);
 void      print_cqueue_trace(cqueue queue);
