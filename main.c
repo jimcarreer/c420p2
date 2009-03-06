@@ -440,7 +440,7 @@ void* statistics(void* targ) {
         gettimeofday(&now,NULL);
         t = time_elapsed(now,started);
         pthread_mutex_lock(statd->displock);
-        update_progress(t,worked/t,analyzed,statd->customers);
+        update_progress(t,100*worked/t,analyzed,statd->customers);
         pthread_mutex_unlock(statd->displock);
 
         //Update queue length statistics
@@ -496,7 +496,7 @@ void* statistics(void* targ) {
     gettimeofday(&now,NULL);
     t = time_elapsed(now,started);
     pthread_mutex_lock(statd->displock);
-    update_progress(t,worked/t,analyzed,statd->customers);
+    update_progress(t,100*worked/t,analyzed,statd->customers);
     pthread_mutex_unlock(statd->displock);
     //Final queue length statistics update
     average = qlen_sum/polled;
