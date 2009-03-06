@@ -439,7 +439,7 @@ void* statistics(void* targ) {
     double wait_ssq = 0; //Sum of the squares of the wait time
     double wait_sum = 0; //Sum of the wait time
     int    analyzed = 0; //Number of customers analyzed
-    /*
+
     while(1) {
         //Check terminate semaphore
         sem_getvalue(statd->terminate, &terminate);
@@ -454,7 +454,7 @@ void* statistics(void* targ) {
         //Get the live customer count
         pthread_mutex_lock(statd->livelock);
         l = statd->live->count;
-        pthread_mutex_lock(statd->livelock);
+        pthread_mutex_unlock(statd->livelock);
 
         //Check to see if there is no more work
         sem_getvalue(statd->customers_left, &customers_left);
@@ -478,7 +478,7 @@ void* statistics(void* targ) {
         wait_ssq += t*t;
 
         psleep(0.02);
-    }*/
+    }
 
     return NULL;
 }
