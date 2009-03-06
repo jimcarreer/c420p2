@@ -4,10 +4,9 @@ void screen_init(void) {
     mainwin = initscr();
     noecho();
     cbreak();
-    nodelay(mainwin, TRUE);
     refresh();
     wrefresh(mainwin);
-    screen = newwin(25, 50, 1, 1);
+    screen = newwin(21, 50, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
     curs_set(0);
     mvwprintw(screen,0,1,"Queue Simulation Statistics");
@@ -52,4 +51,10 @@ void update_progress(double time, double complete) {
     mvwprintw(screen,1,25,"Time Elapsed: %.0lfs", time);
     wrefresh(screen);
     refresh();
+}
+
+void wait_for_user() {
+    mvwprintw(screen,1,20,"Press any key to quit");
+    getch();
+    return;
 }
