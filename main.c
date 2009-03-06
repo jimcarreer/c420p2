@@ -209,7 +209,6 @@ int main(int argc, char** argv)
     gensd.mu             = mu;
     gensd.live           = live;
     gensd.livelock       = &livelock;
-    gensd.dmemlock       = &dmemlock;
     gensd.displock       = &displock;
     gensd.terminate      = &terminate;
     //Initialize statistics data
@@ -222,7 +221,6 @@ int main(int argc, char** argv)
     statd.dead           = dead;
     statd.livelock       = &livelock;
     statd.deadlock       = &deadlock;
-    statd.dmemlock       = &dmemlock;
     statd.displock       = &displock;
     statd.terminate      = &terminate;
     //Initialize service data
