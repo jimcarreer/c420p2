@@ -428,6 +428,7 @@ void* service(void* targ) {
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
     timeval started, now;
+    customer c;
     int l, terminate, customers_left;
     double t;
     //Variables for sigma of queue length
@@ -456,7 +457,7 @@ void* statistics(void* targ) {
         pthread_mutex_lock(statd->livelock);
 
         //Check to see if there is no more work
-        sem_getvalue(servd->customers_left, &customers_left);
+        sem_getvalue(statd->customers_left, &customers_left);
         if(customers_left == 0 && l == 0 && c == NULL) {
             break;
         }
