@@ -468,7 +468,7 @@ void* statistics(void* targ) {
         qlen_ssq += l*l;
         if(polled > 1) {
             average = qlen_sum/polled;
-            sigma   = (qlen_ssq - (qlen_sum*qlen_sum)/polled)
+            sigma   = qlen_ssq - (qlen_sum*qlen_sum)/polled;
             sigma   = sigma/(polled-1);
             sigma   = sqrt(sigma);
             pthread_mutex_lock(statd->displock);
@@ -489,7 +489,7 @@ void* statistics(void* targ) {
         wait_ssq += t*t;
         if(analyzed > 1) {
             average = wait_sum/analyzed;
-            sigma   = (wait_ssq - (wait_sum*wait_sum)/analyzed);
+            sigma   = wait_ssq - (wait_sum*wait_sum)/analyzed;
             sigma   = sigma/(analyzed-1);
             sigma   = sqrt(sigma);
             pthread_mutex_lock(statd->displock);
