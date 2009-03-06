@@ -39,6 +39,7 @@ typedef struct _statistics_data {
     pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
     pthread_mutex_t* displock;        //Reference to mutext to lock display for updating
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
+    sem_t*           servers_left;    //Reference to semaphore of servers left working
 } statistics_data;
 
 typedef struct _service_data {
@@ -49,6 +50,7 @@ typedef struct _service_data {
     pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
     pthread_mutex_t* displock;        //Reference to mutex to lock display for updating
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
+    sem_t*           servers_left;    //Reference to semaphore of servers left working
 } service_data;
 
 //Prototypes and inline functions
@@ -79,6 +81,7 @@ int main(int argc, char** argv)
     pthread_mutex_t  displock;
 
     sem_t            customers_left;
+    sem_t            servers_left;
 
     pthread_t*       service_t;
     pthread_t        genesis_t;
@@ -193,6 +196,7 @@ int main(int argc, char** argv)
 
     //Initialize semaphores
     sem_init(&customers_left, 0, customers);
+    sem_init(&servers_left, 0, servers);
     //Initialize mutexes
     pthread_mutex_init(&deadlock,NULL);
     pthread_mutex_init(&livelock,NULL);
@@ -283,6 +287,7 @@ int main(int argc, char** argv)
     pthread_mutex_destroy(&livelock);
     pthread_mutex_destroy(&deadlock);
     sem_destroy(&customers_left);
+    sem_destory(&servers_left);
     destroy_cqueue(source);
     destroy_cqueue(live);
     destroy_cqueue(dead);
@@ -393,7 +398,7 @@ void* service(void* targ) {
     pthread_mutex_lock(servd->displock);
     update_server(servd->stid,utilized,served);
     pthread_mutex_unlock(servd->displock);
-
+    sem_wait(servd->servers_left);
     return NULL;
 }
 
@@ -401,7 +406,7 @@ void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
     timeval started, now;
     customer* c;
-    int l, customers_left, checks = 0;
+    int l, customers_left, servers_left;
     double t, sigma, average, worked = 0;
     //Variables for sigma of queue length
     int    qlen_ssq = 0; //Sum of the squares of the lengths of queue
@@ -425,20 +430,10 @@ void* statistics(void* targ) {
         c = decqueue(statd->dead);
         pthread_mutex_unlock(statd->deadlock);
 
-        //Get the live customer count
-        pthread_mutex_lock(statd->livelock);
-        l = statd->live->count;
-        pthread_mutex_unlock(statd->livelock);
-
         //Check to see if there is no more work
         sem_getvalue(statd->customers_left, &customers_left);
-        if(customers_left == 0 && l == 0 && c == NULL) {
-            //Try to catch straggling customers at end of sim
-            if(checks <= 3) {
-                checks++;
-                psleep(0.02);
-                continue;
-            }
+        sem_getvalue(statd->servers_left, &servers_left);
+        if(customers_left == 0 && servers_left == 0 && c == NULL) {
             break;
         }
 
@@ -448,6 +443,11 @@ void* statistics(void* targ) {
         pthread_mutex_lock(statd->displock);
         update_progress(t,100*worked/t,analyzed,statd->customers);
         pthread_mutex_unlock(statd->displock);
+
+        //Get the live customer count
+        pthread_mutex_lock(statd->livelock);
+        l = statd->live->count;
+        pthread_mutex_unlock(statd->livelock);
 
         //Update queue length statistics
         polled++;
