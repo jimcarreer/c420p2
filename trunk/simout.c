@@ -7,7 +7,7 @@ void screen_init(void) {
     nodelay(mainwin, TRUE);
     refresh();
     wrefresh(mainwin);
-    screen = newwin(25, 46, 1, 1);
+    screen = newwin(25, 50, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
     curs_set(0);
     mvwprintw(screen,0,1,"Queue Simulation Statistics");
@@ -19,7 +19,7 @@ void screen_end(void) {
 
 void update_server(int stid, double utilized, int served) {
     curs_set(0);
-    int y = 8 - (stid%2)*1 + (stid/2) + (3*stid/2);
+    int y = 9 - (stid%2)*1 + (stid/2) + (3*stid/2);
     int x = (stid%2)*24;
     mvwprintw(screen,y+0,1+x,"Server #%d Statistics",stid+1);
     mvwprintw(screen,y+1,1+x,"Served   : %d",served);
