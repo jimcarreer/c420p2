@@ -401,7 +401,7 @@ void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
     timeval started, now;
     customer* c;
-    int l, customers_left;
+    int l, customers_left, checks = 0;
     double t, sigma, average, worked = 0;
     //Variables for sigma of queue length
     int    qlen_ssq = 0; //Sum of the squares of the lengths of queue
@@ -433,6 +433,12 @@ void* statistics(void* targ) {
         //Check to see if there is no more work
         sem_getvalue(statd->customers_left, &customers_left);
         if(customers_left == 0 && l == 0 && c == NULL) {
+            //Try to catch straggling customers at end of sim
+            if(checks <= 3) {
+                checks++;
+                psleep(0.02);
+                continue;
+            }
             break;
         }
 
