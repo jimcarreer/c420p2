@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     //Setup queues
     live = new_cqueue(mode);
     dead = new_cqueue(FIFO);
-    if(!live || !dead || !hell) {
+    if(!live || !dead) {
         printf("Error: queue memmory allocation failed\n");
         exit(-1);
     }
