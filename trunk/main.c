@@ -287,7 +287,7 @@ int main(int argc, char** argv)
     pthread_mutex_destroy(&livelock);
     pthread_mutex_destroy(&deadlock);
     sem_destroy(&customers_left);
-    sem_destory(&servers_left);
+    sem_destroy(&servers_left);
     destroy_cqueue(source);
     destroy_cqueue(live);
     destroy_cqueue(dead);
