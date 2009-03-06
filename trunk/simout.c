@@ -7,7 +7,7 @@ void screen_init(void) {
     nodelay(mainwin, TRUE);
     refresh();
     wrefresh(mainwin);
-    screen = newwin(25, 50, 1, 1);
+    screen = newwin(25, 46, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
     curs_set(0);
     mvwprintw(screen,0,1,"Queue Simulation Statistics");
