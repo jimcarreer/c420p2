@@ -1,6 +1,6 @@
 #include "simout.h"
 
-void screen_init(void) {
+void screen_init(char* m) {
     mainwin = initscr();
     noecho();
     cbreak();
@@ -9,7 +9,7 @@ void screen_init(void) {
     screen = newwin(22, 50, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
     curs_set(0);
-    mvwprintw(screen,0,1,"Queue Simulation Statistics");
+    mvwprintw(screen,0,1,"Queue Simulation Statistics (%s)", m);
 }
 
 void screen_end(void) {
