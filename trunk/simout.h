@@ -9,5 +9,8 @@ static WINDOW* screen;
 void screen_init(void);
 void screen_end(void);
 void update_server(int stid, double utilized, int served);
+void update_queue_stats(double average, double sigma);
+void update_wait_stats(double average, double sigma);
+void update_progress(double time, double complete);
 
 #endif // SIMOUT_H_INCLUDED
