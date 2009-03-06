@@ -439,7 +439,7 @@ void* statistics(void* targ) {
         //Update Progress
         gettimeofday(&now,NULL);
         t = time_elapsed(now,started);
-        completed = 100.0*analyzed/statd->customers;
+        completed = 100*analyzed/(double)statd->customers;
         pthread_mutex_lock(statd->displock);
         update_progress(t,worked/t,completed);
         pthread_mutex_unlock(statd->displock);
@@ -496,7 +496,7 @@ void* statistics(void* targ) {
     //Update Progress
     gettimeofday(&now,NULL);
     t = time_elapsed(now,started);
-    completed = 100.0*analyzed/statd->customers;
+    completed = 100*analyzed/(double)statd->customers;
     pthread_mutex_lock(statd->displock);
     update_progress(t,worked/t,completed);
     pthread_mutex_unlock(statd->displock);
