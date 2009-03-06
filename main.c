@@ -430,7 +430,7 @@ void* statistics(void* targ) {
     timeval started, now;
     customer* c;
     int l, terminate, customers_left;
-    double t;
+    double t, sigma, average;
     //Variables for sigma of queue length
     int    qlen_ssq = 0; //Sum of the squares of the lengths of queue
     int    qlen_sum = 0; //Sum of the lengths of queue
@@ -462,9 +462,15 @@ void* statistics(void* targ) {
             break;
         }
 
+        //Update queue length statistics
         polled++;
         qlen_sum += l;
         qlen_ssq += l*l;
+        average = qlen_sum/polled;
+        sigma   = (qlen_sum - qlen_ssq/polled)/(polled-1);
+        pthread_mutex_lock(statd->displock);
+        update_queue_stats(average, sigma);
+        pthread_mutex_unlock(statd->displock);
 
         //No customer to analyze
         if(c == NULL) {
@@ -472,10 +478,16 @@ void* statistics(void* targ) {
             continue;
         }
 
+        //Update wait statistics
         t = time_elapsed(c->died,c->born);
         analyzed++;
         wait_sum += t;
         wait_ssq += t*t;
+        average = wait_sum/analyzed;
+        sigma   = (wait_sum - wait_ssq/analyzed)/(analyzed-1);
+        pthread_mutex_lock(statd->displock);
+        update_wait_stats(average, sigma);
+        pthread_mutex_unlock(statd->displock);
 
         psleep(0.02);
     }
