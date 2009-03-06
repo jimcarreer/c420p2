@@ -59,7 +59,7 @@ customer* new_customer(double j, timeval b) {
     return c;
 }
 
-customer* new_customer(void) {
+customer* new_blank_customer(void) {
     customer* c = (customer*)malloc(sizeof(customer));
     c->next     = NULL;
     c->prev     = NULL;
