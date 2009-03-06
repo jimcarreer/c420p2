@@ -402,7 +402,7 @@ void* statistics(void* targ) {
     timeval started, now;
     customer* c;
     int l, customers_left;
-    double t, sigma, average;
+    double t, completed, sigma, average, worked = 0;
     //Variables for sigma of queue length
     int    qlen_ssq = 0; //Sum of the squares of the lengths of queue
     int    qlen_sum = 0; //Sum of the lengths of queue
@@ -438,8 +438,10 @@ void* statistics(void* targ) {
 
         //Update Progress
         gettimeofday(&now,NULL);
+        t = time_elapsed(now,started);
+        completed = 100.0*analyzed/statd->customers
         pthread_mutex_lock(statd->displock);
-        update_progress(time_elapsed(now,started),(double)100*analyzed/statd->customers);
+        update_progress(t,worked/t,completed);
         pthread_mutex_unlock(statd->displock);
 
         //Update queue length statistics
@@ -468,6 +470,7 @@ void* statistics(void* targ) {
             analyzed++;
             wait_sum += t;
             wait_ssq += t*t;
+            worked   += c->job;
             //Don't need mutex only other thread that
             //uses free and malloc is main and it waits
             //on this thread
@@ -490,6 +493,13 @@ void* statistics(void* targ) {
         psleep(0.02);
     }
 
+    //Update Progress
+    gettimeofday(&now,NULL);
+    t = time_elapsed(now,started);
+    completed = 100.0*analyzed/statd->customers
+    pthread_mutex_lock(statd->displock);
+    update_progress(t,worked/t,completed);
+    pthread_mutex_unlock(statd->displock);
     //Final queue length statistics update
     average = qlen_sum/polled;
     sigma   = qlen_ssq - (qlen_sum*qlen_sum)/polled;
