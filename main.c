@@ -457,8 +457,8 @@ void* statistics(void* targ) {
         qlen_sum += l;
         qlen_ssq += l*l;
         if(polled > 1) {
-            average = qlen_sum/polled;
-            sigma   = qlen_ssq - (qlen_sum*qlen_sum)/polled;
+            average = qlen_sum/(double)polled;
+            sigma   = qlen_ssq - (qlen_sum*qlen_sum)/(double)polled;
             sigma   = sigma/(polled-1);
             sigma   = sqrt(sigma);
             pthread_mutex_lock(statd->displock);
@@ -508,8 +508,8 @@ void* statistics(void* targ) {
     update_progress(t,100*worked/t,analyzed,statd->customers);
     pthread_mutex_unlock(statd->displock);
     //Final queue length statistics update
-    average = qlen_sum/polled;
-    sigma   = qlen_ssq - (qlen_sum*qlen_sum)/polled;
+    average = qlen_sum/(double)polled;
+    sigma   = qlen_ssq - (qlen_sum*qlen_sum)/(double)polled;
     sigma   = sigma/(polled-1);
     sigma   = sqrt(sigma);
     pthread_mutex_lock(statd->displock);
