@@ -6,7 +6,7 @@ void screen_init(void) {
     cbreak();
     refresh();
     wrefresh(mainwin);
-    screen = newwin(21, 50, 1, 1);
+    screen = newwin(22, 50, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
     curs_set(0);
     mvwprintw(screen,0,1,"Queue Simulation Statistics");
@@ -57,7 +57,7 @@ void update_progress(double s, double u, int a, int t) {
 }
 
 void wait_for_user() {
-    mvwprintw(screen,1,20,"Press any key to quit");
+    mvwprintw(screen,21,1,"Press any key to quit");
     wrefresh(screen);
     refresh();
     getch();
