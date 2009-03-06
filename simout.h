@@ -11,7 +11,7 @@ void screen_end(void);
 void update_server(int stid, double utilized, int served);
 void update_queue_stats(double average, double sigma);
 void update_wait_stats(double average, double sigma);
-void update_progress(double time, double complete);
+void update_progress(double seconds, double utilized, double complete);
 void wait_for_user();
 
 #endif // SIMOUT_H_INCLUDED
