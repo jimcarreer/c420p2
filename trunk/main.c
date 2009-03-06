@@ -162,7 +162,7 @@ int main(int argc, char** argv)
         printf("The product of mu and the number of servers must be greater than lambda\n");
         exit(-1);
     }
-    if(!rseed) rseed = time(NULL);
+    if(rseed == 0) rseed = time(NULL);
 
     ////////////////////////////////////////////////////////////////////////
     //Setup queues and allocate all memory we will need before we start
@@ -207,6 +207,7 @@ int main(int argc, char** argv)
     //Initialize genesis data
     gensd.customers_left = &customers_left;
     gensd.lambda         = lambda;
+    gensd.rseed          = rseed;
     gensd.mu             = mu;
     gensd.live           = live;
     gensd.source         = source;
