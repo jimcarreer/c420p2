@@ -27,7 +27,6 @@ typedef struct _genesis_data {
     cqueue*          live;            //Reference to queue for live (unserviced) customers
     cqueue*          source;          //Reference to queue containing blank customers
     pthread_mutex_t* livelock;        //Reference to mutex to lock live queue
-    pthread_mutex_t* displock;        //Reference to mutext to lock display for updating
     sem_t*           customers_left;  //Reference to semaphore of customers left to generate
 } genesis_data;
 
@@ -212,7 +211,6 @@ int main(int argc, char** argv)
     gensd.live           = live;
     gensd.source         = source;
     gensd.livelock       = &livelock;
-    gensd.displock       = &displock;
     //Initialize statistics data
     statd.customers_left = &customers_left;
     statd.servers_left   = &servers_left;
