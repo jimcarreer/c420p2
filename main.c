@@ -235,7 +235,10 @@ int main(int argc, char** argv)
     }
 
     //Initialize Display Screen
-    screen_init();
+    switch(mode) {
+        case FIFO: screen_init("FIFO"); break;
+        case SJF : screen_init("SJF");  break;
+    }
 
     //Start gensis thread
     if((terror = pthread_create(&genesis_t,&attributes,(void*)genesis,(void*)&gensd))) {
@@ -359,7 +362,7 @@ void* service(void* targ) {
 
         //Check to see if there is no more work
         sem_getvalue(servd->customers_left, &customers_left);
-        if(customers_left == 0 & c == NULL) {
+        if(customers_left == 0 && c == NULL) {
             break;
         }
 
