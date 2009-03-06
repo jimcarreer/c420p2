@@ -49,7 +49,7 @@ void update_wait_stats(double average, double sigma) {
 
 void update_progress(double time, double complete) {
     mvwprintw(screen,1,1, "Completed: %3.2lf%%", complete);
-    mvwprintw(screen,1,25,"Time Elapsed: %.2lfs", time);
+    mvwprintw(screen,1,25,"Time Elapsed: %.0lfs", time);
     wrefresh(screen);
     refresh();
 }
