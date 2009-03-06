@@ -432,7 +432,7 @@ void* statistics(void* targ) {
         //Update Progress
         gettimeofday(&now,NULL);
         pthread_mutex_lock(statd->displock);
-        update_progress(time_elapsed(now,started),(double)analyzed/statd->customers);
+        update_progress(time_elapsed(now,started),(double)100*analyzed/statd->customers);
         pthread_mutex_unlock(statd->displock);
 
         //Update queue length statistics
