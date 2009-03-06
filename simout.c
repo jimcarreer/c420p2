@@ -21,8 +21,8 @@ void update_server(int stid, double u, int s) {
     int y = 8 - (stid%2)*1 + (stid/2) + (3*stid/2);
     int x = (stid%2)*24 + 1;
     mvwprintw(screen,y+0,x,"Server #%d Statistics",stid+1);
-    mvwprintw(screen,y+1,x,"Served   : %d",s);
-    mvwprintw(screen,y+2,x,"Utilized : %3.2lf%%",u);
+    mvwprintw(screen,y+1,x,"Served   : %d ",s);
+    mvwprintw(screen,y+2,x,"Utilized : %3.2lf%% ",u);
     mvwprintw(screen,y+3,x,"-----------------------");
     wrefresh(screen);
     refresh();
@@ -30,8 +30,8 @@ void update_server(int stid, double u, int s) {
 
 void update_queue_stats(double a, double s) {
     mvwprintw(screen,4,1,"Queue Length Statistics");
-    mvwprintw(screen,5,1,"Average  : %3.2lf", a);
-    mvwprintw(screen,6,1,"Sigma    : %3.2lf", s);
+    mvwprintw(screen,5,1,"Average  : %.2lf ", a);
+    mvwprintw(screen,6,1,"Sigma    : %.2lf ", s);
     mvwprintw(screen,7,1,"-----------------------");
     wrefresh(screen);
     refresh();
@@ -39,8 +39,8 @@ void update_queue_stats(double a, double s) {
 
 void update_wait_stats(double a, double s) {
     mvwprintw(screen,4,25,"Waiting Time Statistics");
-    mvwprintw(screen,5,25,"Average  : %3.4lfs", a);
-    mvwprintw(screen,6,25,"Sigma    : %3.4lfs", s);
+    mvwprintw(screen,5,25,"Average  : %.4lfs ", a);
+    mvwprintw(screen,6,25,"Sigma    : %.4lfs ", s);
     mvwprintw(screen,7,25,"-----------------------");
     wrefresh(screen);
     refresh();
@@ -50,8 +50,8 @@ void update_progress(double s, double u, int a, int t) {
     double c = (100)*a/(double)t;
     mvwprintw(screen,1,1, "Completed : %3.2lf%%", c);
     mvwprintw(screen,2,1, "Served    : %d", a);
-    mvwprintw(screen,1,25,"Time Elapsed : %.0lfs", s);
-    mvwprintw(screen,2,25,"Utilized     : %3.2lf%%", u);
+    mvwprintw(screen,1,25,"Time Elapsed : %.0lfs ", s);
+    mvwprintw(screen,2,25,"Utilized     : %3.2lf%% ", u);
     wrefresh(screen);
     refresh();
 }
