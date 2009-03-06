@@ -274,9 +274,10 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
+    wait_for_user();
+
     /////////////////////////////////////////////////////////////////////////
     //Clean up dynamically allocated memory, mutexes, and semaphores
-
     screen_end();
     pthread_mutex_destroy(&displock);
     pthread_mutex_destroy(&livelock);
