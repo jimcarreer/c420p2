@@ -30,8 +30,8 @@ void update_server(int stid, double u, int s) {
 
 void update_queue_stats(double a, double s) {
     mvwprintw(screen,4,1,"Queue Length Statistics");
-    mvwprintw(screen,5,1,"Average  : %.2lf", a);
-    mvwprintw(screen,6,1,"Sigma    : %.2lf", s);
+    mvwprintw(screen,5,1,"Average  : %3.2lf", a);
+    mvwprintw(screen,6,1,"Sigma    : %3.2lf", s);
     mvwprintw(screen,7,1,"-----------------------");
     wrefresh(screen);
     refresh();
@@ -39,8 +39,8 @@ void update_queue_stats(double a, double s) {
 
 void update_wait_stats(double a, double s) {
     mvwprintw(screen,4,25,"Waiting Time Statistics");
-    mvwprintw(screen,5,25,"Average  : %.4lfs", a);
-    mvwprintw(screen,6,25,"Sigma    : %.4lfs", s);
+    mvwprintw(screen,5,25,"Average  : %3.4lfs", a);
+    mvwprintw(screen,6,25,"Sigma    : %3.4lfs", s);
     mvwprintw(screen,7,25,"-----------------------");
     wrefresh(screen);
     refresh();
