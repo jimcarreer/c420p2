@@ -215,6 +215,7 @@ int main(int argc, char** argv)
     gensd.displock       = &displock;
     //Initialize statistics data
     statd.customers_left = &customers_left;
+    statd.servers_left   = &servers_left;
     statd.customers      = customers;
     statd.live           = live;
     statd.dead           = dead;
@@ -224,6 +225,7 @@ int main(int argc, char** argv)
     //Initialize service data
     for(i = 0; i < servers; i++) {
         servd[i].customers_left = &customers_left;
+        servd[i].servers_left   = &servers_left;
         servd[i].stid           = i;
         servd[i].live           = live;
         servd[i].dead           = dead;
