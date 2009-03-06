@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     cqueue*          dead;   //Stores serviced customers not yet analyzed
     ////////////////////////////////////////////////////////////////////////
     // Time related parameters
-    timeval birthday;
+    timeval started;
     ////////////////////////////////////////////////////////////////////////
     //Thread parameters
     genesis_data     gensd;
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
         printf("Error: queue memmory allocation failed\n");
         exit(-1);
     }
-    gettimeofday(&birthday,NULL)
+    gettimeofday(&started,NULL);
     for(i = 0; i < customers; i++) {
         c = new_customer(0.0,started);
         if(c == NULL) {
