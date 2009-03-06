@@ -54,7 +54,7 @@ void update_progress(double time, double complete) {
 }
 
 void wait_for_user() {
-    mvwprintw(screen,1,20,"Press any key to quit");
+    mvwprintw(screen,1,1,"Press any key to quit");
     getch();
     return;
 }

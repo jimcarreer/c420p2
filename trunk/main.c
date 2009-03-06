@@ -412,6 +412,12 @@ void* statistics(void* targ) {
     double wait_sum = 0; //Sum of the wait time
     int    analyzed = 0; //Number of customers analyzed
 
+    //Initialize statistics output
+    pthread_mutex_lock(statd->displock);
+    update_wait_stats(0,0);
+    update_queue_stats(0,0);
+    pthread_mutex_unlock(statd->displock);
+
     gettimeofday(&started,NULL);
     while(1) {
         //Dequeue dead customer
@@ -483,6 +489,23 @@ void* statistics(void* targ) {
         }
         psleep(0.02);
     }
+
+    //Final queue length statistics update
+    average = qlen_sum/polled;
+    sigma   = qlen_ssq - (qlen_sum*qlen_sum)/polled;
+    sigma   = sigma/(polled-1);
+    sigma   = sqrt(sigma);
+    pthread_mutex_lock(statd->displock);
+    update_queue_stats(average, sigma);
+    pthread_mutex_unlock(statd->displock);
+    //Final wait time statistics update
+    average = wait_sum/analyzed;
+    sigma   = wait_ssq - (wait_sum*wait_sum)/analyzed;
+    sigma   = sigma/(analyzed-1);
+    sigma   = sqrt(sigma);
+    pthread_mutex_lock(statd->displock);
+    update_wait_stats(average, sigma);
+    pthread_mutex_unlock(statd->displock);
 
     return NULL;
 }
