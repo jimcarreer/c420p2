@@ -428,7 +428,7 @@ void* service(void* targ) {
 void* statistics(void* targ) {
     statistics_data* statd = (statistics_data*)targ;
     timeval started, now;
-    customer c;
+    customer* c;
     int l, terminate, customers_left;
     double t;
     //Variables for sigma of queue length
