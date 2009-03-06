@@ -46,7 +46,8 @@ void update_wait_stats(double a, double s) {
     refresh();
 }
 
-void update_progress(double s, double u, double c) {
+void update_progress(double s, double u, int a, int t) {
+    double c = (100)*a/(double)t;
     mvwprintw(screen,1,1, "Completed : %3.2lf%%", c);
     mvwprintw(screen,2,1, "Served    : %d", a);
     mvwprintw(screen,1,25,"Time Elapsed : %.0lfs", s);
