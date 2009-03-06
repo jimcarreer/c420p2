@@ -466,11 +466,13 @@ void* statistics(void* targ) {
         polled++;
         qlen_sum += l;
         qlen_ssq += l*l;
-        average = qlen_sum/polled;
-        sigma   = (qlen_sum - qlen_ssq/polled)/(polled-1);
-        pthread_mutex_lock(statd->displock);
-        update_queue_stats(average, sigma);
-        pthread_mutex_unlock(statd->displock);
+        if(polled > 1) {
+            average = qlen_sum/polled;
+            sigma   = (qlen_sum - qlen_ssq/polled)/(polled-1);
+            pthread_mutex_lock(statd->displock);
+            update_queue_stats(average, sigma);
+            pthread_mutex_unlock(statd->displock);
+        }
 
         //No customer to analyze
         if(c == NULL) {
@@ -483,12 +485,13 @@ void* statistics(void* targ) {
         analyzed++;
         wait_sum += t;
         wait_ssq += t*t;
-        average = wait_sum/analyzed;
-        sigma   = (wait_sum - wait_ssq/analyzed)/(analyzed-1);
-        pthread_mutex_lock(statd->displock);
-        update_wait_stats(average, sigma);
-        pthread_mutex_unlock(statd->displock);
-
+        if(analyzed > 1) {
+            average = wait_sum/analyzed;
+            sigma   = (wait_sum - wait_ssq/analyzed)/(analyzed-1);
+            pthread_mutex_lock(statd->displock);
+            update_wait_stats(average, sigma);
+            pthread_mutex_unlock(statd->displock);
+        }
         psleep(0.02);
     }
 
