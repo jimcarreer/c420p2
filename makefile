@@ -12,9 +12,9 @@ simout.o: simout.h simout.c
 iQ: main.o customer.o simout.o
 	@gcc main.o simout.o customer.o -lm -lcurses -lpthread -o iQ
 
-debug: main.o customer.o
-	@gcc main.o customer.o -g -lm -lpthread -o debug
+debug: main.o customer.o simout.o
+	@gcc main.o simout.o customer.o -g -lm -lcurses -lpthread -o debug
 
 clean:
-	@rm *.o proj2
+	@rm *.o iQ
 
