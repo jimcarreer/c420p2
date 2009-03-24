@@ -1,5 +1,8 @@
 #include "simout.h"
 
+static WINDOW* mainwin;
+static WINDOW* screen;
+
 void screen_init(char* m) {
     mainwin = initscr();
     noecho();

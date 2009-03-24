@@ -3,9 +3,6 @@
 
 #include <ncurses.h>
 
-static WINDOW* mainwin;
-static WINDOW* screen;
-
 void screen_init(char* mode);
 void screen_end(void);
 void update_server(int stid, double utilized, int served);
