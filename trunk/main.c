@@ -379,9 +379,9 @@ void* service(void* targ) {
 
         //Service customer
         worked += c->job;
-        psleep(c->job);
         gettimeofday(&deathday,NULL);
         c->died = deathday;
+        psleep(c->job);
         served++;
 
         //Calculate utilization and update display
