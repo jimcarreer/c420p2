@@ -32,6 +32,7 @@ typedef struct _genesis_data {
 
 typedef struct _statistics_data {
     int              customers;       //Total number of customers being generated
+    int              servers;         //Total number of servers for simulation
     cqueue*          live;            //Reference to queue for live (unserviced) customers
     cqueue*          dead;            //Reference to queue for dead (serviced) customers
     pthread_mutex_t* deadlock;        //Reference to mutex to lock dead queue
@@ -215,6 +216,7 @@ int main(int argc, char** argv)
     //Initialize statistics data
     statd.customers_left = &customers_left;
     statd.servers_left   = &servers_left;
+    statd.servers        = servers;
     statd.customers      = customers;
     statd.live           = live;
     statd.dead           = dead;
@@ -445,7 +447,7 @@ void* statistics(void* targ) {
         gettimeofday(&now,NULL);
         t = time_elapsed(now,started);
         pthread_mutex_lock(statd->displock);
-        update_progress(t,100*worked/t,analyzed,statd->customers);
+        update_progress(t,100*worked/t,analyzed,statd->customers, statd->servers);
         pthread_mutex_unlock(statd->displock);
 
         //Get the live customer count
