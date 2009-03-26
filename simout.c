@@ -49,12 +49,12 @@ void update_wait_stats(double a, double s) {
     refresh();
 }
 
-void update_progress(double s, double u, int a, int t) {
+void update_progress(double s, double u, int a, int t, int n) {
     double c = (100)*a/(double)t;
     mvwprintw(screen,1,1, "Completed : %3.2lf%%", c);
     mvwprintw(screen,2,1, "Served    : %d", a);
     mvwprintw(screen,1,25,"Time Elapsed : %.0lfs ", s);
-    mvwprintw(screen,2,25,"Utilized     : %3.2lf%% ", u);
+    mvwprintw(screen,2,25,"Utilized     : %3.2lf%% ", u/n);
     wrefresh(screen);
     refresh();
 }
