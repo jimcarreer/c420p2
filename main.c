@@ -54,7 +54,7 @@ typedef struct _service_data {
 } service_data;
 
 //Prototypes and inline functions
-inline double rexp(double l) {return -log(1.0-drand48())/l;}
+static inline double rexp(double l) {return -log(1.0-drand48())/l;}
 void*   genesis(void*);
 void*   service(void*);
 void*   statistics(void*);
